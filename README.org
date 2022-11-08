@@ -1,0 +1,12 @@
+
+* wind-wdm
+
+* patch cmd
+git diff <id1> <id2> --binary -- src/ > patches/<file>.diff
+git apply --directory=src/ patches/<file>.diff
+
+* patches
+** autostart
+https://dwm.suckless.org/patches/autostart/
+
+use ~dwm-autostart-20210120-cb3f58a.diff~ custom
