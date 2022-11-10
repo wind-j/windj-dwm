@@ -1,3 +1,6 @@
-src/dwm 
-src/config.h 
+src/dwm
+src/config.h
 *.o
+
+examples/*
+!examples/*.c

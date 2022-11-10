@@ -1,26 +1,36 @@
 
 * wind-dwm
 
-* install
+* Install
 
 #+begin_src shell
 cd src
 make PREFIX=/usr install
 #+end_src
 
-* patch cmd
-git diff <id1> <id2> --binary -- src/ > patches/<file>.diff
+* Patch cmd
+~git diff <id1> <id2> --binary -- src/ > patches/<file>.diff~
 
-git apply patches/<file>.diff
+~git apply patches/<file>.diff~
 
 use [[http://dwm.suckless.org/patches/][official website]] patches:
 
-git apply --directory=src/ patches/<file>.diff
+~git apply --directory=src/ patches/<file>.diff~
 
-* patches
+* Patches
 ** autostart
-[[https://dwm.suckless.org/patches/autostart/][dwm-autostart]]
+[[https://dwm.suckless.org/patches/autostart/][dwm-autostart]] ~dwm-autostart-20210120-cb3f58a.diff~
 
-use ~dwm-autostart-20210120-cb3f58a.diff~ custom
-** 111
+** resatrt
+[[http://dwm.suckless.org/patches/restartsig/][restartsig]] ~dwm-restartsig-20180523-6.2.diff~
 
+[[https://github.com/FT-Labs/pdwm/blob/master/patches/dwm-6.3-patches/dwm-preserveonrestart-6.3.diff][preserveonrestart]] This patch doesnt let all windows mix up into tag 1 after restarting dwm
+
+** new
+
+* Credits
+[[https://github.com/siduck/chadwm][chadwm]]
+
+[[https://github.com/archcraft-os/archcraft-dwm][archcraft-dwm]]
+
+[[https://github.com/FT-Labs/pdwm][pdwm]]
