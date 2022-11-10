@@ -1441,7 +1441,7 @@ runautostart(void)
 
 	// 4. $XDG_DATA_HOME/dwm"
 	xdgdatahome = getenv("XDG_DATA_HOME");
-	if (xdgdatahome == NULL && *xdgdatahome == '\0') {
+	if (xdgdatahome == NULL || *xdgdatahome == '\0') {
 		// $XDG_DATA_HOME is not set or empty
 		return;
 	}

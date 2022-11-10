@@ -41,7 +41,7 @@ index ddc8321..ff53a2d 100644
  dwm is customized by creating a custom config.h and (re)compiling the source
  code. This keeps it fast, secure and simple.
 diff --git a/src/dwm.c b/src/dwm.c
-index 253aba7..6173fb1 100644
+index 253aba7..d951ad3 100644
 --- a/src/dwm.c
 +++ b/src/dwm.c
 @@ -29,6 +29,7 @@
@@ -130,7 +130,7 @@ index 253aba7..6173fb1 100644
 +
 +	// 4. $XDG_DATA_HOME/dwm"
 +	xdgdatahome = getenv("XDG_DATA_HOME");
-+	if (xdgdatahome == NULL && *xdgdatahome == '\0') {
++	if (xdgdatahome == NULL || *xdgdatahome == '\0') {
 +		// $XDG_DATA_HOME is not set or empty
 +		return;
 +	}
