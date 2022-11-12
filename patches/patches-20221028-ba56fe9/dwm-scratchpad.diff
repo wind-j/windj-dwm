@@ -1,0 +1,92 @@
+diff --git a/src/config.def.h b/src/config.def.h
+index d74d200..ff159cc 100644
+--- a/src/config.def.h
++++ b/src/config.def.h
+@@ -79,11 +79,14 @@ static const Layout layouts[] = {
+ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
+ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+ static const char *termcmd[]  = { "st", NULL };
++static const char scratchpadname[] = "scratchpad";
++static const char *scratchpadcmd[] = { "st", "-t", scratchpadname, "-g", "120x34", NULL };
+ 
+ static const Key keys[] = {
+ 	/* modifier                     key        function        argument */
+ 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+ 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
++	{ MODKEY,                       XK_grave,  togglescratch,  {.v = scratchpadcmd } },
+ 	{ MODKEY,                       XK_b,      togglebar,      {0} },
+ 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
+ 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+diff --git a/src/dwm.c b/src/dwm.c
+index bdd310f..15455c3 100644
+--- a/src/dwm.c
++++ b/src/dwm.c
+@@ -227,6 +227,7 @@ static void tag(const Arg *arg);
+ static void tagmon(const Arg *arg);
+ static void togglebar(const Arg *arg);
+ static void togglefloating(const Arg *arg);
++static void togglescratch(const Arg *arg);
+ static void toggletag(const Arg *arg);
+ static void toggleview(const Arg *arg);
+ static void unfocus(Client *c, int setfocus);
+@@ -307,6 +308,8 @@ struct Pertag {
+ /* compile-time check if all tags fit into an unsigned int bit array. */
+ struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+ 
++static unsigned int scratchtag = 1 << LENGTH(tags);
++
+ /* function implementations */
+ void
+ applyrules(Client *c)
+@@ -1402,6 +1405,14 @@ manage(Window w, XWindowAttributes *wa)
+ 	c->y = MAX(c->y, c->mon->wy);
+ 	c->bw = borderpx;
+ 
++	selmon->tagset[selmon->seltags] &= ~scratchtag;
++	if (!strcmp(c->name, scratchpadname)) {
++		c->mon->tagset[c->mon->seltags] |= c->tags = scratchtag;
++		c->isfloating = True;
++		c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
++		c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
++	}
++
+ 	wc.border_width = c->bw;
+ 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
+ 	XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
+@@ -2147,6 +2158,7 @@ spawn(const Arg *arg)
+ {
+ 	if (arg->v == dmenucmd)
+ 		dmenumon[0] = '0' + selmon->num;
++	selmon->tagset[selmon->seltags] &= ~scratchtag;
+ 	if (fork() == 0) {
+ 		if (dpy)
+ 			close(ConnectionNumber(dpy));
+@@ -2208,6 +2220,28 @@ togglefloating(const Arg *arg)
+ 	arrange(selmon);
+ }
+ 
++void
++togglescratch(const Arg *arg)
++{
++	Client *c;
++	unsigned int found = 0;
++
++	for (c = selmon->clients; c && !(found = c->tags & scratchtag); c = c->next);
++	if (found) {
++		unsigned int newtagset = selmon->tagset[selmon->seltags] ^ scratchtag;
++		if (newtagset) {
++			selmon->tagset[selmon->seltags] = newtagset;
++			focus(NULL);
++			arrange(selmon);
++		}
++		if (ISVISIBLE(c)) {
++			focus(c);
++			restack(selmon);
++		}
++	} else
++		spawn(arg);
++}
++
+ void
+ toggletag(const Arg *arg)
+ {
