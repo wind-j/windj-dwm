@@ -1,0 +1,102 @@
+diff --git a/src/config.def.h b/src/config.def.h
+index ff159cc..22b8575 100644
+--- a/src/config.def.h
++++ b/src/config.def.h
+@@ -88,6 +88,8 @@ static const Key keys[] = {
+ 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+ 	{ MODKEY,                       XK_grave,  togglescratch,  {.v = scratchpadcmd } },
+ 	{ MODKEY,                       XK_b,      togglebar,      {0} },
++	{ MODKEY|ShiftMask,             XK_j,      rotatestack,    {.i = +1 } },
++	{ MODKEY|ShiftMask,             XK_k,      rotatestack,    {.i = -1 } },
+ 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
+ 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+ 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
+diff --git a/src/dwm.c b/src/dwm.c
+index 15455c3..0143dd8 100644
+--- a/src/dwm.c
++++ b/src/dwm.c
+@@ -174,6 +174,8 @@ static void dragmfact(const Arg *arg);
+ static void dragcfact(const Arg *arg);
+ static void drawbar(Monitor *m);
+ static void drawbars(void);
++static void enqueue(Client *c);
++static void enqueuestack(Client *c);
+ static void enternotify(XEvent *e);
+ static void expose(XEvent *e);
+ static void focus(Client *c);
+@@ -204,6 +206,7 @@ static void resize(Client *c, int x, int y, int w, int h, int interact);
+ static void resizeclient(Client *c, int x, int y, int w, int h);
+ static void resizemouse(const Arg *arg);
+ static void restack(Monitor *m);
++static void rotatestack(const Arg *arg);
+ static void run(void);
+ static void runautostart(void);
+ static void scan(void);
+@@ -1110,6 +1113,28 @@ drawbars(void)
+ 		drawbar(m);
+ }
+ 
++void
++enqueue(Client *c)
++{
++	Client *l;
++	for (l = c->mon->clients; l && l->next; l = l->next);
++	if (l) {
++		l->next = c;
++		c->next = NULL;
++	}
++}
++
++void
++enqueuestack(Client *c)
++{
++	Client *l;
++	for (l = c->mon->stack; l && l->snext; l = l->snext);
++	if (l) {
++		l->snext = c;
++		c->snext = NULL;
++	}
++}
++
+ void
+ enternotify(XEvent *e)
+ {
+@@ -1752,6 +1777,38 @@ restack(Monitor *m)
+ 	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
+ }
+ 
++void
++rotatestack(const Arg *arg)
++{
++	Client *c = NULL, *f;
++
++	if (!selmon->sel)
++		return;
++	f = selmon->sel;
++	if (arg->i > 0) {
++		for (c = nexttiled(selmon->clients); c && nexttiled(c->next); c = nexttiled(c->next));
++		if (c) {
++			detach(c);
++			attach(c);
++			detachstack(c);
++			attachstack(c);
++		}
++	} else {
++		if ((c = nexttiled(selmon->clients))) {
++			detach(c);
++			enqueue(c);
++			detachstack(c);
++			enqueuestack(c);
++		}
++	}
++	if (c) {
++		arrange(selmon);
++		//unfocus(f, 1);
++		focus(f);
++		restack(selmon);
++	}
++}
++
+ void
+ run(void)
+ {
