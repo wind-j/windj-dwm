@@ -1,6 +1,8 @@
 src/dwm
 src/config.h
 *.o
+*.rej
+*.bak
 
 examples/*
 !examples/*.c
